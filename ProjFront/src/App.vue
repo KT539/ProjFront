@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { searchMovies } from "./api/movies.js";
+import TestTailwind from './components/Tailwind.vue';
 
 const results = ref([]);
 const error = ref(null);
@@ -21,4 +22,7 @@ onMounted(async () => {
   <h1>Test Backend</h1>
   <div v-if="error">Error: {{ error.message }}</div>
   <pre>{{ results }}</pre>
+  <div>
+    <TestTailwind />
+  </div>
 </template>
