@@ -6,7 +6,7 @@ Créer une appli frontend en Vue.js qui consomme les données d'une **API extern
 
 Choix retenu : 
 
--  
+* OMDb (The Open Movie Database)
 ---
 ### **Fonctionnalités attendues**
 
