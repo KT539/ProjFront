@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import movieRoutes from "./routes/movieRoute.js";
 
 
@@ -10,6 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 
+app.use(cors({ origin: "http://localhost:5173" }));
 app.use("/movies", movieRoutes);
 
 
