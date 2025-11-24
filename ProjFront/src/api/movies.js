@@ -1,13 +1,18 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: "http://localhost:3000/movies"
-});
-
-export function getMovieById(id) {
-  return api.get(`/${id}`).then(res => res.data);
-}
-
-export function searchMovies(params) {
-  return api.get("/search", { params }).then(res => res.data);
+export async function searchMovies(title, year = "", genre = "") {
+  try {
+    const res = await axios.get(`${import.meta.env.VITE_API_URL}/movies/search`, {
+      params: {
+        title,
+        year,
+        genre,
+        apiKey: import.meta.env.VITE_API_KEY
+      }
+    });
+    return res.data; // attendu : tableau de films
+  } catch (err) {
+    console.error("Erreur fetch API:", err);
+    throw err;
+  }
 }
