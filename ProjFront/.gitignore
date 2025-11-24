@@ -34,3 +34,6 @@ coverage
 
 # Vitest
 __screenshots__/
+
+ProjFront/package-lock.json
+.idea/
