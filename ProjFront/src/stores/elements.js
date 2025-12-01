@@ -1,40 +1,39 @@
 import defineStore from "pinia";
-import elementApi from "../api/elementApi";
+import elementApi, {getElementById, getElements} from "../api/elementApi";
+import axios from "axios";
 
 export const useElementsStore = defineStore("elements", {
   state: () => ({
     items: [],
+    selected: null,
     laoding: false,
     error: null,
   }),
 
   actions: {
-    async fetchAll() {
+    async fetchElements() {
       this.loading = true;
-      this.error = null;
-
       try {
-        const reponse = await elementApi.getAll();
-        this.items = reponse.data;
-      } catch (error) {
-        this.error = error.message;
-      }finally {
+        const response = await getElements()
+        this.items = response.data
+      } catch (err) {
+        this.error = err.message;
+      } finally {
         this.loading = false;
       }
     },
 
-    async fetchById(id) {
-      this.loading = true;
-      this.error = null;
-
-      try {
-        const reponse = await elementApi.getById(id);
-        this.items = reponse.data;
-      } catch (error) {
-        this.error = error.message;
-      }finally {
-        this.loading = false;
-      }
+    async fetchElementDetail(id) {
+    this.loading = true;
+    try {
+      const response = await getElementById(id)
+      this.selected = response.data
+    } catch(err) {
+      this.error = err.message;
+    }finally {
+      this.loading = false;
+    }
     }
   }
-});
+  })
+
