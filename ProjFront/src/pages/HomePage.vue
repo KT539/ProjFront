@@ -1,30 +1,66 @@
-<script setup>
-import { onMounted } from "vue";
-import { storeToRefs } from "pinia";
-import { useMovieStore } from "@/stores/movie";
-
-const movieStore = useMovieStore();
-const { movie, loading, error } = storeToRefs(movieStore);
-
-onMounted(() => {
-  movieStore.fetchMovie("Avatar");
-});
-</script>
-
 <template>
   <div>
-    <h1>Test OMDB API</h1>
+    <h1 class="text-3xl font-bold mb-4">Films</h1>
 
-    <div v-if="loading">Chargement...</div>
-    <div v-if="error">{{ error }}</div>
+    <SearchBar @search="handleSearch" />
 
-    <div v-if="movie">
-      <h2>{{ movie.Title }} ({{ movie.Year }})</h2>
-      <img :src="movie.Poster" alt="Poster" width="200" />
-      <p><strong>Genre :</strong> {{ movie.Genre }}</p>
-      <p><strong>Réalisateur :</strong> {{ movie.Director }}</p>
-      <p><strong>Note IMDB :</strong> {{ movie.imdbRating }}</p>
-      <p><strong>Résumé :</strong> {{ movie.Plot }}</p>
+    <div v-if="loading" class="text-gray-500 mb-3">
+      Chargement...
     </div>
+
+    <div v-if="error" class="text-red-500 my-3">
+      Erreur : {{ error }}
+    </div>
+
+    <MovieList :movies="movies" />
   </div>
 </template>
+
+<script setup>
+import { ref, onMounted } from "vue";
+import MovieList from "../components/MovieList.vue";
+import SearchBar from "../components/SearchBar.vue";
+import { featuredMovies, searchMovies } from "../api/movies.js";
+
+const movies = ref([]);
+const loading = ref(false);
+const error = ref(null);
+
+const loadFeatured = async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    movies.value = await featuredMovies();
+  } catch (err) {
+    console.error(err);
+    error.value = "Erreur lors du chargement des films à la une";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const handleSearch = async (query) => {
+  if (!query) {
+    await loadFeatured();
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const results = await searchMovies(query);
+    movies.value = Array.isArray(results) ? results : [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Erreur lors de la recherche";
+    movies.value = [];
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(async () => {
+  await loadFeatured();
+});
+</script>
