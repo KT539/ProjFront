@@ -1,31 +1,25 @@
-import axios from "axios";
-/*
-const api = axios.create({
-  baseURL: "http://localhost:3000/movies"
-});
+// src/api/movies.js
+import axiosClient from "./axiosClient.js";
 
-export function getMovieById(id) {
-  return api.get(`/${id}`).then(res => res.data);
-}
-
-export function searchMovies(params) {
-  return api.get("/search", { params }).then(res => res.data);
-}
-
- */
-// Films “à la Une” (liste prédéfinie d’IDs OMDb ou titres populaires)
+// Films à la une (par IDs)
 export const featuredMovies = async () => {
   const ids = ["tt0499549","tt0133093","tt0110912"]; // Avatar, Matrix, Pulp Fiction
-  const promises = ids.map(id => axios.get(`/movies/${id}`));
-  const results = await Promise.all(promises);
-  return results.map(r => r.data);
+  const promises = ids.map((id) =>
+    axiosClient.get("/", { params: { i: id } })
+  );
+
+  const responses = await Promise.all(promises);
+
+  return responses
+    .map((r) => r.data)
+    .filter((m) => m && m.Response === "True");
 };
 
-// Recherche par titre ou ID
+// Recherche par titre
 export const searchMovies = async (query) => {
   if (!query) return [];
-  const res = await axios.get("/movies/search", {
-    params: { title: query }
-  });
-  return res.data;
+
+  const res = await axiosClient.get("/", { params: { s: query } });
+
+  return res.data.Response === "True" ? res.data.Search : [];
 };

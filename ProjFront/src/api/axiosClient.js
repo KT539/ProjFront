@@ -1,31 +1,32 @@
+// src/api/axiosClient.js
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // URL de ton API (définit dans .env)
+  baseURL: "https://www.omdbapi.com/", // OMDb API
   timeout: 5000,
 });
 
-omdbClient.interceptors.request.use((config) => {
-  // ajoute la clé API à CHAQUE requête
+// Ajouter la clé API automatiquement à chaque requête
+axiosClient.interceptors.request.use((config) => {
   config.params = {
     ...config.params,
-    apikey: import.meta.env.VITE_API_KEY
+    apikey: import.meta.env.VITE_API_KEY, // vérifie le nom exact dans ton .env
   };
   return config;
 });
 
-// Intercepteur : ajouter des logs ou un token
+// Logs pour debugging
 axiosClient.interceptors.request.use((config) => {
-  console.log("requête envoyé :", config.url)
-  return config
-})
+  console.log("Requête OMDb :", config.url, config.params);
+  return config;
+});
 
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error(" Erreur API :", error)
-    return Promise.reject(error)
-  })
+    console.error("Erreur API :", error);
+    return Promise.reject(error);
+  }
+);
 
 export default axiosClient;
-
