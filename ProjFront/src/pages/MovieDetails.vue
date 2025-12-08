@@ -14,16 +14,26 @@
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import axiosClient from "@/api/axiosClient.js";
+import {useHistoryStore} from "@/stores/history.js";
 
 const route = useRoute();
 const movie = ref(null);
 const fallback = "https://via.placeholder.com/300x450?text=No+Image";
+const historyStore = useHistoryStore()
 
 onMounted(async () => {
   try {
     const res = await axiosClient.get("/", { params: { i: route.params.id } });
+
     if (res.data.Response === "True") {
       movie.value = res.data;
+
+      historyStore.addToHistory({
+        imdbID: movie.value.imdbID,
+        Title: movie.value.Title,
+        Year: movie.value.Year,
+        Poster: movie.value.Poster,
+      })
     }
   } catch (err) {
     console.error(err);
