@@ -17,6 +17,19 @@
       <SearchBar @search="handleSearch" />
     </div>
 
+    <!-- Bouton filtres -->
+    <div class="flex justify-end my-3">
+      <Button @click="showFilters = !showFilters">
+        {{ showFilters ? "Fermer les filtres" : "Filtres" }}
+      </Button>
+    </div>
+
+    <!-- Panneau de filtres -->
+    <ElementFilters
+      v-if="showFilters"
+      @filter="applyFilters"
+    />
+
     <!-- Messages -->
     <div v-if="loading" class="text-gray-400 mb-3 text-center">
       Chargement...
@@ -27,57 +40,29 @@
     </div>
 
     <!-- Liste des films -->
-    <div
-      v-if="movies.length > 0"
-      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-    >
-      <div
-        v-for="movie in movies"
-        :key="movie.imdbID"
-        @click="goToDetails(movie.imdbID)"
-        class="bg-gray-800 rounded-xl shadow-lg overflow-hidden cursor-pointer hover:scale-105 transition transform"
-      >
-        <!-- Poster -->
-        <div class="aspect-[2/3] w-full bg-gray-700 overflow-hidden">
-          <img
-            :src="movie.Poster !== 'N/A' ? movie.Poster : fallback"
-            class="w-full h-full object-cover"
-            alt="Poster"
-          />
-        </div>
-
-        <!-- Infos -->
-        <div class="p-4">
-          <h3 class="text-xl font-semibold truncate">{{ movie.Title }}</h3>
-          <p class="text-gray-400 text-sm mb-2">{{ movie.Year }}</p>
-
-          <!-- Badges genre -->
-          <div class="flex flex-wrap gap-1">
-        <span
-          v-for="genre in movie.Genre ? movie.Genre.split(', ') : []"
-          :key="genre"
-          class="px-2 py-1 bg-gray-700 rounded text-xs"
-        >
-          {{ genre }}
-        </span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MovieList
+      :movies="filteredMovies"
+      :fallback="fallback"
+      @select="goToDetails"
+    />
 
     <!-- Aucun film -->
-    <div v-else class="text-center text-gray-400 mt-12 text-xl">
+    <div v-if="filteredMovies.length === 0 && !loading" class="text-center text-gray-400 mt-12 text-xl">
       Aucun film trouvé pour le moment.
     </div>
+</div>
 
-  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed} from "vue";
+import axiosClient from "../api/axiosClient.js";
 import { useRouter } from "vue-router";
 import MovieList from "../components/MovieList.vue";
 import SearchBar from "../components/SearchBar.vue";
+import ElementFilters from "../components/elements/ElementFilters.vue";
+import Button from "../components/ui/Button.vue";
+
 import { featuredMovies, searchMovies } from "../api/movies.js";
 
 const router = useRouter();
@@ -86,10 +71,56 @@ const loading = ref(false);
 const error = ref(null);
 const fallback = "https://via.placeholder.com/300x450?text=No+Image";
 
+const showFilters = ref(false);
+
+// Filtres appliqués
+const filters = ref({
+  title: "",
+  year: "",
+  genre: "",
+  minRating: "",
+});
+
+/* -----------------------------
+   FILTRAGE LOCAL (FULL)
+----------------------------- */
+const filteredMovies = computed(() => {
+  return movies.value.filter((m) => {
+    const okTitle =
+      !filters.value.title ||
+      m.Title?.toLowerCase().includes(filters.value.title.toLowerCase());
+
+    const okYear =
+      !filters.value.year ||
+      m.Year?.includes(filters.value.year);
+
+    const okGenre =
+      !filters.value.genre ||
+      m.Genre?.toLowerCase().includes(filters.value.genre.toLowerCase());
+
+    const okRating =
+      !filters.value.minRating ||
+      parseFloat(m.imdbRating) >= parseFloat(filters.value.minRating);
+
+    return okTitle && okYear && okGenre && okRating;
+  });
+});
+
+/* -----------------------------
+   APPLIQUER LES FILTRES
+----------------------------- */
+const applyFilters = (f) => {
+  filters.value = { ...filters.value, ...f };
+};
+
+/* -----------------------------
+   CHARGER LES FILMS FEATURED
+----------------------------- */
 const loadFeatured = async () => {
   loading.value = true;
   error.value = null;
   try {
+    // Films à la une déjà complets
     movies.value = await featuredMovies();
   } catch (err) {
     console.error(err);
@@ -99,6 +130,9 @@ const loadFeatured = async () => {
   }
 };
 
+/* -----------------------------
+   RECHERCHE AVEC DETAILS
+----------------------------- */
 const handleSearch = async (query) => {
   if (!query) {
     await loadFeatured();
@@ -109,8 +143,25 @@ const handleSearch = async (query) => {
   error.value = null;
 
   try {
+    // 1️⃣ Recherche basique (titre seulement)
     const results = await searchMovies(query);
-    movies.value = Array.isArray(results) ? results : [];
+
+    if (!Array.isArray(results)) {
+      movies.value = [];
+      return;
+    }
+
+    // 2️⃣ Récupération des détails COMPLETS pour chaque film
+    const detailed = await Promise.all(
+      results.map(async (item) => {
+        const res = await axiosClient.get("/", {
+          params: { i: item.imdbID },
+        });
+        return res.data.Response === "True" ? res.data : null;
+      })
+    );
+
+    movies.value = detailed.filter(Boolean);
   } catch (err) {
     console.error(err);
     error.value = "Erreur lors de la recherche";
