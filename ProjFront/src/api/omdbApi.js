@@ -5,3 +5,9 @@ export const getMovieByTitle = (title) => {
     params: { t: title } // t = titre du film
   });
 };
+
+export const getMovieById = (id) => {
+  return omdbClient.get("/", {
+    params: { i: id }
+  });
+};

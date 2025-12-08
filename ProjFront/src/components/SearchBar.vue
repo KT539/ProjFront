@@ -15,7 +15,7 @@ const handleSearch = () => {
       v-model="searchInput"
       type="text"
       placeholder="Rechercher un film..."
-      class="border p-2 flex-1 rounded-l"
+      class="border p-2 flex-1 rounded-l text-black"
     />
     <button
       @click="handleSearch"
