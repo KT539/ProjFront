@@ -1,4 +1,6 @@
 <template>
+
+
   <div class="movie-list">
     <MovieCard
       v-for="movie in movies"

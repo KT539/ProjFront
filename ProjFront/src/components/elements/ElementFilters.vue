@@ -1,12 +1,6 @@
 <template>
   <div class="bg-white shadow p-4 rounded-xl mx-6 mt-4">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-      <Input
-        v-model="local.title"
-        label="Titre"
-        placeholder="Ex: Batman"
-      />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
       <Input
         v-model="local.year"
@@ -19,10 +13,16 @@
         label="Genre"
         placeholder="Ex: Action"
       />
+
+      <Input
+        v-model="local.minRating"
+        label="Note IMDb min"
+        placeholder="Ex: 7.5"
+      />
     </div>
 
     <div class="flex justify-end mt-4">
-      <Button @click="apply">Rechercher</Button>
+      <Button @click="apply">Appliquer les filtres</Button>
     </div>
   </div>
 </template>
@@ -38,6 +38,7 @@ const local = reactive({
   title: "",
   year: "",
   genre: "",
+  minRating: "",
 });
 
 const apply = () => {
