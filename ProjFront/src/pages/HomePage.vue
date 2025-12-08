@@ -1,68 +1,66 @@
 <template>
-  <DefaultLayout>
-    <div class="px-6 pt-6 pb-2">
-      <h1 class="text-3xl font-bold text-gray-800">Recherche de films 🎬</h1>
-      <p class="text-gray-600 mt-1">Explore la base de données OMDb (via API Proxy).</p>
+  <div>
+    <h1 class="text-3xl font-bold mb-4">Films</h1>
+
+    <SearchBar @search="handleSearch" />
+
+    <div v-if="loading" class="text-gray-500 mb-3">
+      Chargement...
     </div>
 
-    <ElementFilters @filter="applyFilters" />
-
-    <div class="px-6 py-4">
-      <Loader v-if="loading" />
-
-      <ElementList
-        v-else-if="movies.length"
-        :elements="movies"
-      />
-
-      <p v-else class="text-center text-gray-500 mt-10">Aucun film trouvé.</p>
+    <div v-if="error" class="text-red-500 my-3">
+      Erreur : {{ error }}
     </div>
-  </DefaultLayout>
+
+    <MovieList :movies="movies" />
+  </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import DefaultLayout from "../layouts/DefaultLayout.vue";
-import ElementFilters from "../components/elements/ElementFilters.vue";
-import ElementList from "../components/elements/ElementList.vue";
-import Loader from "../components/ui/Loader.vue";
+import { ref, onMounted } from "vue";
+import MovieList from "../components/MovieList.vue";
+import SearchBar from "../components/SearchBar.vue";
+import { featuredMovies, searchMovies } from "../api/movies.js";
 
-import { searchMovies } from "../api/movies";
-
-// ------------------------------------------
 const movies = ref([]);
 const loading = ref(false);
+const error = ref(null);
 
-const filters = ref({
-  title: "Batman",
-  year: "",
-  genre: ""
-});
-
-// ------------------------------------------
-const fetchMovies = async () => {
+const loadFeatured = async () => {
   loading.value = true;
+  error.value = null;
   try {
-    movies.value = await searchMovies(
-      filters.value.title,
-      filters.value.year,
-      filters.value.genre
-    );
-  } catch (error) {
-    console.error("Erreur API backend:", error);
+    movies.value = await featuredMovies();
+  } catch (err) {
+    console.error(err);
+    error.value = "Erreur lors du chargement des films à la une";
   } finally {
     loading.value = false;
   }
 };
 
-// ------------------------------------------
-const applyFilters = (newFilters) => {
-  filters.value = newFilters;
-  fetchMovies();
+const handleSearch = async (query) => {
+  if (!query) {
+    await loadFeatured();
+    return;
+  }
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const results = await searchMovies(query);
+    movies.value = Array.isArray(results) ? results : [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Erreur lors de la recherche";
+    movies.value = [];
+  } finally {
+    loading.value = false;
+  }
 };
 
-// Chargement initial
-console.log("Avant fetchMovies");
-fetchMovies();
-console.log("Après fetchMovies");
+onMounted(async () => {
+  await loadFeatured();
+});
 </script>

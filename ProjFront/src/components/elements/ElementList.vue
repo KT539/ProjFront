@@ -1,14 +1,25 @@
+<script setup>
+import { onMounted } from "vue"
+import { useElementsStore } from "@/stores/elements"
+
+const store = useElementsStore()
+
+onMounted(() => {
+  store.fetchElements()
+})
+</script>
+
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-4">
+  <div>
+    <h2>Liste des éléments</h2>
+
+    <div v-if="store.loading">Chargement...</div>
+    <div v-if="store.error">{{ store.error }}</div>
+
     <ElementCard
-      v-for="item in elements"
-      :key="item.imdbID"
-      :element="item"
+      v-for="el in store.items"
+      :key="el.id"
+      :element="el"
     />
   </div>
 </template>
-
-<script setup>
-import ElementCard from "./ElementCard.vue";
-defineProps(["elements"]);
-</script>

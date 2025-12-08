@@ -1,17 +1,17 @@
-import axiosClient from "./axiosClient";
+// src/api/elementsApi.js
+import axiosClient from "./axiosClient"
 
-export default {
-  getAll() {
-    return axiosClient.get("/elements");
-  },
+export const getElements = () => {
+  return axiosClient.get("/elements")
+}
 
-  getById(id) {
-    return axiosClient.get(`/elements/${id}`);
-  },
+export const getElementById = (id) => {
+  return axiosClient.get(`/elements/${id}`)
+}
 
-  search(query) {
-    return axiosClient.get(`/elements`, {
-      params: {q: query},
-    });
-  }
-};
+export const searchElements = (query) => {
+  return axiosClient.get(`/elements/search`, {
+    params: { q: query }
+  })
+}
+
