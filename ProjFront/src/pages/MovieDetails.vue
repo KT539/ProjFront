@@ -53,12 +53,14 @@
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axiosClient from "@/api/axiosClient.js";
+import {useHistoryStore} from "@/stores/history.js";
 import { toggleFavorite, getFavorites } from "../utils/favorites.js";
 
 const router = useRouter();
 const route = useRoute();
 const movie = ref(null);
 const fallback = "https://via.placeholder.com/300x450?text=No+Image";
+const historyStore = useHistoryStore()
 
 // ref pour forcer la réactivité du bouton
 const favoritesList = ref(getFavorites());
@@ -82,8 +84,16 @@ function goToFavorites() {
 onMounted(async () => {
   try {
     const res = await axiosClient.get("/", { params: { i: route.params.id } });
+
     if (res.data.Response === "True") {
       movie.value = res.data;
+
+      historyStore.addToHistory({
+        imdbID: movie.value.imdbID,
+        Title: movie.value.Title,
+        Year: movie.value.Year,
+        Poster: movie.value.Poster,
+      })
     }
   } catch (err) {
     console.error(err);
