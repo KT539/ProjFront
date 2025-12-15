@@ -43,24 +43,24 @@ Choix retenu :
 ---
 ### **Structure interne du projet**
 
-ProjFront/
-├── .vscode/                 # Configuration de l’éditeur (VS Code)
-├── node_modules/            # Dépendances du projet
-├── src/                     # Code source principal
-│   ├── api/                 # Gestion des appels API (OMDb, Axios)
-│   ├── assets/              # Fichiers statiques (CSS, images)
-│   ├── components/          # Composants réutilisables Vue
-│   ├── pages/               # Pages de l’application (routes)
-│   ├── router/              # Configuration de Vue Router
-│   ├── stores/              # Stores Pinia (état global)
-│   ├── utils/               # Fonctions utilitaires (gestion des favoris)
-│   ├── App.vue              # Composant racine
-│   └── main.js              # Point d’entrée de l’application
-├── .env                     # Variables d’environnement (clé API, etc.)
-├── index.html               # Template HTML principal
-├── package.json             # Dépendances et scripts npm
-└── vite.config.js           # Configuration Vite
+Le projet utilise une structure standard pour une application Vue.js / Vite.
+
+#### Vue d'ensemble de l'arborescence
+
+ProjFront/ ├── .vscode/ # Configuration de l'éditeur (VS Code) ├── node_modules/ # Dépendances du projet ├── src/ # Code source principal │   ├── api/ # Gestion des appels API (OMDb, Axios) │   ├── assets/ # Fichiers statiques (CSS, images) │   ├── components/ # Composants réutilisables Vue │   ├── pages/ # Pages de l’application (routes) │   ├── router/ # Configuration de Vue Router │   ├── stores/ # Stores Pinia (état global) │   ├── utils/ # Fonctions utilitaires (gestion des favoris) │   ├── App.vue # Composant racine │   └── main.js # Point d’entrée de l’application ├── .env # Variables d’environnement (clé API, etc.) ├── index.html # Template HTML principal ├── package.json # Dépendances et scripts npm └── vite.config.js # Configuration Vite
+
+
+#### Dossiers clés dans `src/`
+
+* `api/` : Logique de communication avec l'API externe (OMDb).
+* `components/` : Contient tous les composants réutilisables de l'interface utilisateur.
+* `pages/` : Composants de niveau supérieur représentant les vues accessibles via le *router*.
+* `router/` : Configuration et définition des chemins de l'application (routing).
+* `stores/` : Modules Pinia pour la gestion centralisée et globale de l'état.
+* `utils/` : Fonctions utilitaires transversales (ex: manipulation des données, logique des favoris).
+
 ---
+
 ### **Guide d'utilisation de l'API**
 
-* à rajouter
+* *à rajouter*
