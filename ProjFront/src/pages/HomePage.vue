@@ -19,9 +19,10 @@
 
     <!-- Bouton filtres -->
     <div class="flex justify-end my-3">
-      <Button @click="showFilters = !showFilters">
+      <BaseButton @click="showFilters = !showFilters">
         {{ showFilters ? "Fermer les filtres" : "Filtres" }}
-      </Button>
+      </BaseButton>
+
     </div>
 
     <!-- Panneau de filtres -->
@@ -61,7 +62,7 @@ import { useRouter } from "vue-router";
 import MovieList from "../components/MovieList.vue";
 import SearchBar from "../components/SearchBar.vue";
 import ElementFilters from "../components/elements/ElementFilters.vue";
-import Button from "../components/ui/Button.vue";
+import BaseButton from "../components/ui/BaseButton.vue";
 
 import { featuredMovies, searchMovies } from "../api/movies.js";
 

@@ -1,33 +1,25 @@
 <template>
-  <button
-    class="px-4 py-2 rounded-lg shadow w-max transition"
-    :class="isFavorite ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'"
-    @click="handleClick"
-    v-bind="$attrs"
+  <BaseButton
+    :variant="isFavorite ? 'danger' : 'primary'"
+    @click="toggle"
   >
-    <!-- Slot par défaut, texte dynamique si rien n'est passé -->
-    <slot>
-      {{ isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris' }}
-    </slot>
-  </button>
+    {{ isFavorite ? "Retirer des favoris" : "Ajouter aux favoris" }}
+  </BaseButton>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { getFavorites, toggleFavorite } from '../../utils/favorites.js'
+import { ref } from "vue";
+import BaseButton from "./BaseButton.vue";
+import { getFavorites, toggleFavorite } from "../../utils/favorites.js";
 
 const props = defineProps({
-  movieId: {
-    type: [String, Number],
-    required: true
-  }
-})
+  movieId: [String, Number],
+});
 
-const isFavorite = ref(getFavorites().includes(props.movieId))
+const isFavorite = ref(getFavorites().includes(props.movieId));
 
-function handleClick() {
-  toggleFavorite(props.movieId)
-  isFavorite.value = !isFavorite.value
-}
+const toggle = () => {
+  toggleFavorite(props.movieId);
+  isFavorite.value = !isFavorite.value;
+};
 </script>
-

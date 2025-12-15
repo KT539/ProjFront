@@ -68,6 +68,7 @@ import { ref, onMounted } from "vue";
 import { getFavorites } from "../utils/favorites.js";
 import { getMovieById } from "../api/omdbApi.js";
 import { useRouter } from "vue-router";
+// import AppHeader from "@/components/layouts/AppHeader.vue";
 
 const router = useRouter();
 const movies = ref([]);
