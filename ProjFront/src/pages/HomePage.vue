@@ -33,13 +33,33 @@
     </div>
 
     <!-- Panneau de filtres -->
-    <ElementFilters v-if="showFilters" @filter="applyFilters" />
+    <ElementFilters
+      v-if="showFilters"
+      @filter="applyFilters"
+    />
 
     <!-- Messages -->
     <div v-if="loading" class="text-gray-400 mb-3 text-center">Chargement...</div>
     <div v-if="error" class="text-red-500 my-3 text-center">Erreur : {{ error }}</div>
 
-    <!-- Liste des films paginée -->
+    <div v-if="error" class="text-red-500 my-3 text-center">
+      Erreur : {{ error }}
+    </div>
+
+    <!-- Tri des films -->
+    <div class="flex justify-end mb-4">
+      <select
+        v-model="sortOption"
+        class="bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700"
+      >
+        <option value="title-asc">Titre (A → Z)</option>
+        <option value="title-desc">Titre (Z → A)</option>
+        <option value="year-asc">Année (croissante)</option>
+        <option value="year-desc">Année (décroissante)</option>
+      </select>
+    </div>
+
+    <!-- Liste des films -->
     <MovieList
       :movies="paginatedMovies"
       :fallback="fallback"
@@ -81,6 +101,7 @@ import ElementFilters from "../components/elements/ElementFilters.vue";
 import BaseButton from "../components/ui/BaseButton.vue";
 import { featuredMovies } from "../api/movies.js"; // fetch initial movies
 import { searchMovies } from "../api/movies.js";
+import axiosClient from "../api/axiosClient.js";
 
 const router = useRouter();
 const movies = ref([]);
@@ -89,6 +110,9 @@ const error = ref(null);
 const fallback = "https://via.placeholder.com/300x450?text=No+Image";
 
 const showFilters = ref(false);
+const sortOption = ref("title-asc");
+const getYear = (y) => parseInt(y?.slice(0, 4)) || 0;
+
 
 // Pagination
 const itemsPerPage = ref(15);
@@ -120,7 +144,7 @@ const filteredMovies = computed(() => {
 ----------------------------- */
 const paginatedMovies = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
-  return filteredMovies.value.slice(start, start + itemsPerPage.value);
+  return sortedMovies.value.slice(start, start + itemsPerPage.value);
 });
 
 const totalPages = computed(() => Math.ceil(filteredMovies.value.length / itemsPerPage.value));
@@ -136,7 +160,58 @@ watch([filters, itemsPerPage], () => { currentPage.value = 1; });
 const applyFilters = (f) => { filters.value = { ...filters.value, ...f }; };
 
 /* -----------------------------
+   TRIER LES RÉSULTATS
+----------------------------- */
+
+const sortedMovies = computed(() => {
+  const list = [...filteredMovies.value];
+
+  switch (sortOption.value) {
+    case "title-asc":
+      return list.sort((a, b) =>
+        (a.Title || "").localeCompare(b.Title || "")
+      );
+
+    case "title-desc":
+      return list.sort((a, b) =>
+        (b.Title || "").localeCompare(a.Title || "")
+      );
+
+    case "year-asc":
+      return list.sort((a, b) =>
+        getYear(a.Year) - getYear(b.Year)
+      );
+
+    case "year-desc":
+      return list.sort((a, b) =>
+        getYear(b.Year) - getYear(a.Year)
+      );
+
+    default:
+      return list;
+  }
+});
+
+
+/* -----------------------------
    RECHERCHE
+----------------------------- */
+const loadFeatured = async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    // Films à la une déjà complets
+    movies.value = await featuredMovies();
+  } catch (err) {
+    console.error(err);
+    error.value = "Erreur lors du chargement des films à la une";
+  } finally {
+    loading.value = false;
+  }
+};
+
+/* -----------------------------
+   CHARGER FILMS FEATURED
 ----------------------------- */
 const handleSearch = async (query) => {
   if (!query) {
@@ -146,7 +221,6 @@ const handleSearch = async (query) => {
 
   loading.value = true;
   error.value = null;
-
   try {
     const results = await searchMovies(query); // récupère plusieurs pages et filtre
     movies.value = results;
@@ -155,22 +229,6 @@ const handleSearch = async (query) => {
     console.error(err);
     error.value = "Erreur lors de la recherche";
     movies.value = [];
-  } finally {
-    loading.value = false;
-  }
-};
-
-/* -----------------------------
-   CHARGER FILMS FEATURED
------------------------------ */
-const loadFeatured = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    movies.value = await featuredMovies();
-  } catch (err) {
-    console.error(err);
-    error.value = "Erreur lors du chargement des films à la une";
   } finally {
     loading.value = false;
   }
