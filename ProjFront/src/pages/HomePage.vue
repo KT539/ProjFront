@@ -3,7 +3,6 @@
     <!-- Header -->
     <header class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">🎬 Films</h1>
-
       <button
         @click="router.push('/favorites')"
         class="px-4 py-2 bg-yellow-500 text-black font-bold rounded-lg shadow hover:bg-yellow-600 transition"
@@ -17,53 +16,71 @@
       <SearchBar @search="handleSearch" />
     </div>
 
-    <!-- Bouton filtres -->
-    <div class="flex justify-end my-3">
+    <!-- Bouton filtres et choix items per page -->
+    <div class="flex justify-between items-center my-3">
       <BaseButton @click="showFilters = !showFilters">
         {{ showFilters ? "Fermer les filtres" : "Filtres" }}
       </BaseButton>
+
+      <div class="flex items-center gap-2">
+        <label>Films par page :</label>
+        <select v-model.number="itemsPerPage" class="bg-gray-800 text-white p-1 rounded">
+          <option :value="15">15</option>
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+        </select>
+      </div>
     </div>
 
     <!-- Panneau de filtres -->
-    <ElementFilters
-      v-if="showFilters"
-      @filter="applyFilters"
-    />
+    <ElementFilters v-if="showFilters" @filter="applyFilters" />
 
     <!-- Messages -->
-    <div v-if="loading" class="text-gray-400 mb-3 text-center">
-      Chargement...
-    </div>
+    <div v-if="loading" class="text-gray-400 mb-3 text-center">Chargement...</div>
+    <div v-if="error" class="text-red-500 my-3 text-center">Erreur : {{ error }}</div>
 
-    <div v-if="error" class="text-red-500 my-3 text-center">
-      Erreur : {{ error }}
-    </div>
-
-    <!-- Liste des films -->
+    <!-- Liste des films paginée -->
     <MovieList
-      :movies="filteredMovies"
+      :movies="paginatedMovies"
       :fallback="fallback"
       @select="goToDetails"
     />
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="flex justify-center gap-2 mt-6">
+      <button
+        @click="prevPage"
+        :disabled="currentPage === 1"
+        class="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50"
+      >
+        Précédent
+      </button>
+      <span>Page {{ currentPage }} / {{ totalPages }}</span>
+      <button
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
+        class="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50"
+      >
+        Suivant
+      </button>
+    </div>
 
     <!-- Aucun film -->
     <div v-if="filteredMovies.length === 0 && !loading" class="text-center text-gray-400 mt-12 text-xl">
       Aucun film trouvé pour le moment.
     </div>
-</div>
-
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed} from "vue";
-import axiosClient from "../api/axiosClient.js";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import MovieList from "../components/MovieList.vue";
 import SearchBar from "../components/SearchBar.vue";
 import ElementFilters from "../components/elements/ElementFilters.vue";
 import BaseButton from "../components/ui/BaseButton.vue";
-
-import { featuredMovies, searchMovies } from "../api/movies.js";
+import { featuredMovies } from "../api/movies.js"; // fetch initial movies
+import { searchMovies } from "../api/movies.js";
 
 const router = useRouter();
 const movies = ref([]);
@@ -72,6 +89,10 @@ const error = ref(null);
 const fallback = "https://via.placeholder.com/300x450?text=No+Image";
 
 const showFilters = ref(false);
+
+// Pagination
+const itemsPerPage = ref(15);
+const currentPage = ref(1);
 
 // Filtres appliqués
 const filters = ref({
@@ -82,56 +103,40 @@ const filters = ref({
 });
 
 /* -----------------------------
-   FILTRAGE LOCAL (FULL)
+   FILTRAGE LOCAL
 ----------------------------- */
 const filteredMovies = computed(() => {
   return movies.value.filter((m) => {
-    const okTitle =
-      !filters.value.title ||
-      m.Title?.toLowerCase().includes(filters.value.title.toLowerCase());
-
-    const okYear =
-      !filters.value.year ||
-      m.Year?.includes(filters.value.year);
-
-    const okGenre =
-      !filters.value.genre ||
-      m.Genre?.toLowerCase().includes(filters.value.genre.toLowerCase());
-
-    const okRating =
-      !filters.value.minRating ||
-      parseFloat(m.imdbRating) >= parseFloat(filters.value.minRating);
-
+    const okTitle = !filters.value.title || m.Title?.toLowerCase().includes(filters.value.title.toLowerCase());
+    const okYear = !filters.value.year || m.Year?.includes(filters.value.year);
+    const okGenre = !filters.value.genre || m.Genre?.toLowerCase().includes(filters.value.genre.toLowerCase());
+    const okRating = !filters.value.minRating || parseFloat(m.imdbRating) >= parseFloat(filters.value.minRating);
     return okTitle && okYear && okGenre && okRating;
   });
 });
 
 /* -----------------------------
+   FILMS PAGINÉS
+----------------------------- */
+const paginatedMovies = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  return filteredMovies.value.slice(start, start + itemsPerPage.value);
+});
+
+const totalPages = computed(() => Math.ceil(filteredMovies.value.length / itemsPerPage.value));
+const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
+const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
+
+// Reset page à 1 si filtres ou itemsPerPage changent
+watch([filters, itemsPerPage], () => { currentPage.value = 1; });
+
+/* -----------------------------
    APPLIQUER LES FILTRES
 ----------------------------- */
-const applyFilters = (f) => {
-  filters.value = { ...filters.value, ...f };
-};
+const applyFilters = (f) => { filters.value = { ...filters.value, ...f }; };
 
 /* -----------------------------
-   CHARGER LES FILMS FEATURED
------------------------------ */
-const loadFeatured = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    // Films à la une déjà complets
-    movies.value = await featuredMovies();
-  } catch (err) {
-    console.error(err);
-    error.value = "Erreur lors du chargement des films à la une";
-  } finally {
-    loading.value = false;
-  }
-};
-
-/* -----------------------------
-   RECHERCHE AVEC DETAILS
+   RECHERCHE
 ----------------------------- */
 const handleSearch = async (query) => {
   if (!query) {
@@ -143,25 +148,9 @@ const handleSearch = async (query) => {
   error.value = null;
 
   try {
-    // 1️⃣ Recherche basique (titre seulement)
-    const results = await searchMovies(query);
-
-    if (!Array.isArray(results)) {
-      movies.value = [];
-      return;
-    }
-
-    // 2️⃣ Récupération des détails COMPLETS pour chaque film
-    const detailed = await Promise.all(
-      results.map(async (item) => {
-        const res = await axiosClient.get("/", {
-          params: { i: item.imdbID },
-        });
-        return res.data.Response === "True" ? res.data : null;
-      })
-    );
-
-    movies.value = detailed.filter(Boolean);
+    const results = await searchMovies(query); // récupère plusieurs pages et filtre
+    movies.value = results;
+    currentPage.value = 1;
   } catch (err) {
     console.error(err);
     error.value = "Erreur lors de la recherche";
@@ -171,6 +160,25 @@ const handleSearch = async (query) => {
   }
 };
 
+/* -----------------------------
+   CHARGER FILMS FEATURED
+----------------------------- */
+const loadFeatured = async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    movies.value = await featuredMovies();
+  } catch (err) {
+    console.error(err);
+    error.value = "Erreur lors du chargement des films à la une";
+  } finally {
+    loading.value = false;
+  }
+};
+
+/* -----------------------------
+   NAVIGATION VERS DETAILS
+----------------------------- */
 const goToDetails = (id) => {
   router.push({ name: "movie-details", params: { id } });
 };
