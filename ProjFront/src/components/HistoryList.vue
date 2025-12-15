@@ -3,7 +3,7 @@
     <h3 class="font-bold mb-2">Historique des films</h3>
     <ul>
       <li v-for="item in history" :key="item.imdbID" class="mb-2">
-        <router-link :to="`/movie/${item.Title}`" class="flex items-center space-x-2 hover:underline">
+        <router-link :to="`/movie/${item.imdbID}`" class="flex items-center space-x-2 hover:underline">
           <img :src="item.Poster" alt="" class="w-12 h-16 object-cover"/>
           <span>{{ item.Title }} ({{ item.Year }})</span>
         </router-link>
