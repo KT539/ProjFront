@@ -55,8 +55,8 @@ Le projet utilise une structure standard pour une application Vue.js / Vite.
 * `router/` : Configuration de Vue Router
 * `stores/` : Modules Pinia pour la gestion centralisée et globale des états
 * `utils/` : Fonctions utilitaires (favoris)
-* `App.vue/` : Composant racine
-* `main.js/` : Point d'entrée de l'application
+* `App.vue` : Composant racine
+* `main.js` : Point d'entrée de l'application
 ---
 
 ### **Guide d'utilisation de l'API**
