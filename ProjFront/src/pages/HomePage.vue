@@ -39,15 +39,28 @@
       Erreur : {{ error }}
     </div>
 
+    <!-- Tri des films -->
+    <div class="flex justify-end mb-4">
+      <select
+        v-model="sortOption"
+        class="bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700"
+      >
+        <option value="title-asc">Titre (A → Z)</option>
+        <option value="title-desc">Titre (Z → A)</option>
+        <option value="year-asc">Année (croissante)</option>
+        <option value="year-desc">Année (décroissante)</option>
+      </select>
+    </div>
+
     <!-- Liste des films -->
     <MovieList
-      :movies="filteredMovies"
+      :movies="sortedMovies"
       :fallback="fallback"
       @select="goToDetails"
     />
 
     <!-- Aucun film -->
-    <div v-if="filteredMovies.length === 0 && !loading" class="text-center text-gray-400 mt-12 text-xl">
+    <div v-if="sortedMovies.length === 0 && !loading" class="text-center text-gray-400 mt-12 text-xl">
       Aucun film trouvé pour le moment.
     </div>
 </div>
@@ -72,6 +85,9 @@ const error = ref(null);
 const fallback = "https://via.placeholder.com/300x450?text=No+Image";
 
 const showFilters = ref(false);
+const sortOption = ref("title-asc");
+const getYear = (y) => parseInt(y?.slice(0, 4)) || 0;
+
 
 // Filtres appliqués
 const filters = ref({
@@ -112,6 +128,40 @@ const filteredMovies = computed(() => {
 const applyFilters = (f) => {
   filters.value = { ...filters.value, ...f };
 };
+
+/* -----------------------------
+   TRIER LES RÉSULTATS
+----------------------------- */
+
+const sortedMovies = computed(() => {
+  const list = [...filteredMovies.value];
+
+  switch (sortOption.value) {
+    case "title-asc":
+      return list.sort((a, b) =>
+        (a.Title || "").localeCompare(b.Title || "")
+      );
+
+    case "title-desc":
+      return list.sort((a, b) =>
+        (b.Title || "").localeCompare(a.Title || "")
+      );
+
+    case "year-asc":
+      return list.sort((a, b) =>
+        getYear(a.Year) - getYear(b.Year)
+      );
+
+    case "year-desc":
+      return list.sort((a, b) =>
+        getYear(b.Year) - getYear(a.Year)
+      );
+
+    default:
+      return list;
+  }
+});
+
 
 /* -----------------------------
    CHARGER LES FILMS FEATURED
