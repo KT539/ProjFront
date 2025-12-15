@@ -2,12 +2,6 @@
   <div class="bg-gray-800 text-white shadow p-4 rounded-xl mx-6 mt-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-      <Input
-        v-model="local.title"
-        label="Titre"
-        placeholder="Ex: Matrix"
-      />
-
       <Input v-model="local.year"
              label="Année"
              placeholder="Ex: 2015"

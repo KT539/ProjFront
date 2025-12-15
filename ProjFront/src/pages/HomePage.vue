@@ -22,7 +22,6 @@
       <BaseButton @click="showFilters = !showFilters">
         {{ showFilters ? "Fermer les filtres" : "Filtres" }}
       </BaseButton>
-
     </div>
 
     <!-- Panneau de filtres -->
