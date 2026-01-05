@@ -5,7 +5,7 @@
     </h1>
 
     <nav class="flex gap-3">
-      <BaseButton @click="goHome">
+      <BaseButton v-if="route.path !== '/'" @click="goHome">
         Accueil
       </BaseButton>
 
@@ -13,7 +13,11 @@
         Favoris
       </BaseButton>
 
-      <BaseButton variant="primary" @click="goHistory">
+      <BaseButton
+        v-if="route.path !== '/history'"
+        variant="primary"
+        @click="goHistory"
+      >
         Historique
       </BaseButton>
     </nav>
@@ -21,13 +25,13 @@
 </template>
 
 <script setup>
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router"; // Import de useRoute
 import BaseButton from "@/components/ui/BaseButton.vue";
 
 const router = useRouter();
+const route = useRoute(); // Initialisation de la route
 
 const goHome = () => router.push("/");
 const goFavorites = () => router.push("/favorites");
 const goHistory = () => router.push("/history");
 </script>
-

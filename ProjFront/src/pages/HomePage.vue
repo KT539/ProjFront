@@ -1,14 +1,30 @@
 <template>
-  <div class="min-h-screen bg-gray-900 text-white p-6">
+  <div
+    :class="[
+      'min-h-screen p-6 transition-colors duration-300',
+      darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+    ]"
+  >
     <!-- Header -->
     <header class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">🎬 Films</h1>
-      <button
-        @click="router.push('/favorites')"
-        class="px-4 py-2 bg-yellow-500 text-black font-bold rounded-lg shadow hover:bg-yellow-600 transition"
-      >
-        Mes Favoris
-      </button>
+      <div class="flex gap-2">
+        <!-- Toggle Mode -->
+        <button
+          @click="darkMode = !darkMode"
+          class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition"
+        >
+          {{ darkMode ? 'Mode Clair' : 'Mode Sombre' }}
+        </button>
+
+        <!-- Favoris -->
+        <button
+          @click="router.push('/favorites')"
+          class="px-4 py-2 bg-yellow-500 text-black font-bold rounded-lg shadow hover:bg-yellow-600 transition"
+        >
+          Mes Favoris
+        </button>
+      </div>
     </header>
 
     <!-- Barre de recherche -->
@@ -16,7 +32,7 @@
       <SearchBar @search="handleSearch" />
     </div>
 
-    <!-- Bouton filtres et choix items per page -->
+    <!-- Filtres & items per page -->
     <div class="flex justify-between items-center my-3">
       <BaseButton @click="showFilters = !showFilters">
         {{ showFilters ? "Fermer les filtres" : "Filtres" }}
@@ -24,7 +40,10 @@
 
       <div class="flex items-center gap-2">
         <label>Films par page :</label>
-        <select v-model.number="itemsPerPage" class="bg-gray-800 text-white p-1 rounded">
+        <select
+          v-model.number="itemsPerPage"
+          :class="darkMode ? 'bg-gray-800 text-white p-1 rounded' : 'bg-gray-200 text-gray-900 p-1 rounded'"
+        >
           <option :value="15">15</option>
           <option :value="25">25</option>
           <option :value="50">50</option>
@@ -36,8 +55,12 @@
     <ElementFilters v-if="showFilters" @filter="applyFilters" />
 
     <!-- Messages -->
-    <div v-if="loading" class="text-gray-400 mb-3 text-center">Chargement...</div>
-    <div v-if="error" class="text-red-500 my-3 text-center">Erreur : {{ error }}</div>
+    <div v-if="loading" :class="darkMode ? 'text-gray-400' : 'text-gray-500'" class="mb-3 text-center">
+      Chargement...
+    </div>
+    <div v-if="error" class="text-red-500 my-3 text-center">
+      Erreur : {{ error }}
+    </div>
 
     <!-- Liste des films paginée -->
     <MovieList
@@ -51,7 +74,10 @@
       <button
         @click="prevPage"
         :disabled="currentPage === 1"
-        class="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50"
+        :class="[
+          'px-3 py-1 rounded disabled:opacity-50',
+          darkMode ? 'bg-gray-700 text-white' : 'bg-gray-300 text-gray-900'
+        ]"
       >
         Précédent
       </button>
@@ -59,14 +85,19 @@
       <button
         @click="nextPage"
         :disabled="currentPage === totalPages"
-        class="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50"
+        :class="[
+          'px-3 py-1 rounded disabled:opacity-50',
+          darkMode ? 'bg-gray-700 text-white' : 'bg-gray-300 text-gray-900'
+        ]"
       >
         Suivant
       </button>
     </div>
 
     <!-- Aucun film -->
-    <div v-if="filteredMovies.length === 0 && !loading" class="text-center text-gray-400 mt-12 text-xl">
+    <div v-if="filteredMovies.length === 0 && !loading"
+         :class="darkMode ? 'text-gray-400' : 'text-gray-500'"
+         class="text-center mt-12 text-xl">
       Aucun film trouvé pour le moment.
     </div>
   </div>
@@ -79,8 +110,7 @@ import MovieList from "../components/MovieList.vue";
 import SearchBar from "../components/SearchBar.vue";
 import ElementFilters from "../components/elements/ElementFilters.vue";
 import BaseButton from "../components/ui/BaseButton.vue";
-import { featuredMovies } from "../api/movies.js"; // fetch initial movies
-import { searchMovies } from "../api/movies.js";
+import { featuredMovies, searchMovies } from "../api/movies.js";
 
 const router = useRouter();
 const movies = ref([]);
@@ -89,6 +119,19 @@ const error = ref(null);
 const fallback = "https://via.placeholder.com/300x450?text=No+Image";
 
 const showFilters = ref(false);
+const darkMode = ref(true);
+
+// Charger le mode depuis localStorage
+onMounted(() => {
+  const saved = localStorage.getItem('darkMode');
+  if (saved !== null) darkMode.value = saved === 'true';
+  loadFeatured();
+});
+
+// Sauvegarder le choix à chaque changement
+watch(darkMode, (val) => {
+  localStorage.setItem('darkMode', val);
+});
 
 // Pagination
 const itemsPerPage = ref(15);
@@ -102,9 +145,7 @@ const filters = ref({
   minRating: "",
 });
 
-/* -----------------------------
-   FILTRAGE LOCAL
------------------------------ */
+// Filtrage local
 const filteredMovies = computed(() => {
   return movies.value.filter((m) => {
     const okTitle = !filters.value.title || m.Title?.toLowerCase().includes(filters.value.title.toLowerCase());
@@ -115,9 +156,7 @@ const filteredMovies = computed(() => {
   });
 });
 
-/* -----------------------------
-   FILMS PAGINÉS
------------------------------ */
+// Films paginés
 const paginatedMovies = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   return filteredMovies.value.slice(start, start + itemsPerPage.value);
@@ -127,17 +166,13 @@ const totalPages = computed(() => Math.ceil(filteredMovies.value.length / itemsP
 const prevPage = () => { if (currentPage.value > 1) currentPage.value--; };
 const nextPage = () => { if (currentPage.value < totalPages.value) currentPage.value++; };
 
-// Reset page à 1 si filtres ou itemsPerPage changent
+// Reset page si filtres/itemsPerPage changent
 watch([filters, itemsPerPage], () => { currentPage.value = 1; });
 
-/* -----------------------------
-   APPLIQUER LES FILTRES
------------------------------ */
+// Appliquer les filtres
 const applyFilters = (f) => { filters.value = { ...filters.value, ...f }; };
 
-/* -----------------------------
-   RECHERCHE
------------------------------ */
+// Recherche
 const handleSearch = async (query) => {
   if (!query) {
     await loadFeatured();
@@ -148,7 +183,7 @@ const handleSearch = async (query) => {
   error.value = null;
 
   try {
-    const results = await searchMovies(query); // récupère plusieurs pages et filtre
+    const results = await searchMovies(query);
     movies.value = results;
     currentPage.value = 1;
   } catch (err) {
@@ -160,9 +195,7 @@ const handleSearch = async (query) => {
   }
 };
 
-/* -----------------------------
-   CHARGER FILMS FEATURED
------------------------------ */
+// Charger films featured
 const loadFeatured = async () => {
   loading.value = true;
   error.value = null;
@@ -176,14 +209,8 @@ const loadFeatured = async () => {
   }
 };
 
-/* -----------------------------
-   NAVIGATION VERS DETAILS
------------------------------ */
+// Navigation vers détails
 const goToDetails = (id) => {
   router.push({ name: "movie-details", params: { id } });
 };
-
-onMounted(async () => {
-  await loadFeatured();
-});
 </script>

@@ -15,26 +15,26 @@ export const featuredMovies = async () => {
     .filter((m) => m && m.Response === "True");
 };
 
-// Recherche par titre sur plusieurs pages pour être permissif
+// Recherche permissive par titre
 export const searchMovies = async (query) => {
   if (!query) return [];
 
   let allMovies = [];
 
-  // OMDb renvoie 10 résultats par page, on va chercher les 5 premières pages max
+  // OMDb renvoie 10 résultats par page, on peut parcourir jusqu'à 5 pages
   for (let page = 1; page <= 5; page++) {
     const res = await axiosClient.get("/", { params: { s: query, page } });
 
-    if (res.data.Response !== "True" || !res.data.Search) break;
+    if (!res.data || res.data.Response !== "True" || !res.data.Search) break;
 
+    // Filtre local pour inclure tous les titres contenant la recherche
     const filteredPage = res.data.Search.filter(movie =>
       movie.Title.toLowerCase().includes(query.toLowerCase())
     );
 
     allMovies = [...allMovies, ...filteredPage];
 
-    // Si moins de 10 résultats, on sait qu'il n'y a plus de page
-    if (res.data.Search.length < 10) break;
+    if (res.data.Search.length < 10) break; // pas de page suivante
   }
 
   return allMovies;
