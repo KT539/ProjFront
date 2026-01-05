@@ -96,8 +96,8 @@ export const searchMovies = async (query) => {
 
   // Retourne les résultats si la réponse est valide
   return res.data.Response === "True" ? res.data.Search : [];
-};
-
+}; 
+```
 ______________________
 
 Présentation dans la branche main
