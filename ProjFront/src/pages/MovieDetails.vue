@@ -1,12 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-900 text-white p-6 relative">
     <!-- Bouton Favoris -->
-    <button
-      @click="goToFavorites"
-      class="fixed top-4 right-4 px-4 py-2 bg-yellow-500 text-black font-bold rounded-lg shadow hover:bg-yellow-600 transition z-50"
-    >
-      ⭐ Favoris
-    </button>
+    <AppHeader/>
 
     <div v-if="movie" class="max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-lg overflow-hidden p-6 mt-12">
 
@@ -55,6 +50,7 @@ import { useRoute, useRouter } from "vue-router";
 import axiosClient from "@/api/axiosClient.js";
 import {useHistoryStore} from "@/stores/history.js";
 import { toggleFavorite, getFavorites } from "../utils/favorites.js";
+import AppHeader from "@/components/layouts/AppHeader.vue";
 
 const router = useRouter();
 const route = useRoute();

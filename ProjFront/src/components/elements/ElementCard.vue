@@ -3,9 +3,10 @@
     class="bg-white rounded-xl shadow-md hover:shadow-xl overflow-hidden transition transform hover:-translate-y-1 cursor-pointer"
   >
     <img
-      :src="element.Poster !== 'N/A' ? element.Poster : placeholder"
+      :src="element.Poster"
+      @error="handleError"
       class="w-full h-64 object-cover"
-      alt="Movie Poster"
+      alt="Poster"
     />
 
     <div class="p-4 space-y-1">
@@ -25,6 +26,26 @@
 </template>
 
 <script setup>
-import placeholder from "@/assets/no-poster.png";
-defineProps(["element"]);
+  import { defineProps, computed } from "vue";
+
+  defineProps(["element"]);
+
+  const props = defineProps({
+  movie: { type: Object, required: true }
+});
+
+  const FALLBACK_PATH = "/no-image.jpg";
+
+  const moviePoster = computed(() => {
+  return (props.movie.Poster && props.movie.Poster !== 'N/A')
+  ? props.movie.Poster
+  : FALLBACK_PATH;
+});
+
+  const handleError = (e) => {
+  // Vérifie si on n'est pas déjà sur l'image de secours pour éviter la boucle
+  if (e.target.src !== window.location.origin + FALLBACK_PATH) {
+  e.target.src = FALLBACK_PATH;
+}
+};
 </script>
